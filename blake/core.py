@@ -103,11 +103,11 @@ class Document(Blake):
             "subdirectory": []
         }
         self._title = None
-        self._content = None
+        self._content = ""
         self.static_prefix = static_prefix
 
         if parse:
-            plaintext_document = self.create()
+            self.create()
 
     def __hash__(self):
         # Unique identifier for 2 newly created docs will work?
@@ -122,7 +122,12 @@ class Document(Blake):
 
     @property
     def content(self):
-        return markdown(self._content)
+        md = markdown(self._content)
+        for img in map(lambda i: i, re.findall('!\[.*\]\((.*)\)', self._content)):
+            # TODO: Move external image *identifiers* to a custom property
+            if img[:7] != "http://" and img[:8] != "https://" and img[:2] != "//":
+                 md = md.replace(img, self.static_prefix + img)
+        return md 
 
     @content.setter
     def content(self, c):
@@ -131,38 +136,38 @@ class Document(Blake):
     def create(self, head=None):
         """Parses the raw document."""
         if self.head["full_path"] is not None:
-            plain = open(self.head["full_path"]).read()
-            parts = plain.split('---', 2)
-
-            # Format as follows: ["", "yaml front matter", "markdown"]
-            if not parts[0]:
-                yaml_present = True
+            blakefile = open(self.head["full_path"], "r")
+            cont = ""
+            yaml_present = False
+            blakefile.readline()   # This line should always contain "---"
+            line = blakefile.readline()
+            while line:
+                if line[0] == "-":
+                    yaml_present = True
+                    break
+                cont += line
+                line = blakefile.readline()
 
             if yaml_present:
-                head = yaml.load(parts[1])
-                if "title" in head:
-                    self.title = head["title"]
-                    head.pop("title")
-                # TODO: A custom iterable type for these would be nice
-                if "tags" in head:
-                    tag_list = head["tags"].split(",")
-                    self.head['tags'] = map(lambda t: t.strip(), tag_list)
-                    head.pop("tags")
-                for key in head:
-                    self.head[key] = head[key]
-                self.content = parts[2].decode("UTF-8")
+                # The following line is the bottleneck of #create(), should
+                # investigate how to boost YAML parsing
+                h = yaml.load(cont)
+                h = {}
+                for key in h: 
+                    if key == "title":
+                        self.title = h[key] 
+                    elif key == "tags":
+                        self.head['tags'] = map(lambda t: t.strip(), h[key].split(","))
+                    else:
+                        self.head[key] = h[key] 
+                line = blakefile.readline()
+                while line:
+                    self._content += line
+                    line = blakefile.readline()
             else:
-                self.content = plain.decode("UTF-8")
-
-            # TODO: move image handling section to a seperate method, as
-            #       rendering will happen on the fly and there is no need to
-            #       do this in advance
-            self.images = map(lambda i: i, re.findall('!\[.*\]\((.*)\)', plain))
-
-            for img in self.images:
-                # TODO: Move external image *identifiers* to a custom property
-                if img[:7] != "http://" and img[:8] != "https://" and img[:2] != "//":
-                    self.content = self.content.replace(img, self.static_prefix + img)
+                self._content = cont
+            blakefile.close()
+            self._content = self._content.decode("UTF-8")
 
         # Extra params in head argument override those found in yaml (if any)
         if head is not None:
