@@ -40,6 +40,9 @@ class QueryDict(object):
         for key in self._dict:
             yield key
 
+    def keys(self):
+        return self._dict.keys()
+
 
 def _validate_path(path, filename=None, extensions=EXTENSIONS):
     """Checks if given path contains a valid Markdown document."""
@@ -181,7 +184,7 @@ class Document(Blake):
                 h = yaml.load(cont)
                 for key in h: 
                     if key == "title":
-                        self.title = h[key] 
+                        self._title = h[key] 
                     elif key == "tags":
                         self.head['tags'] = map(lambda t: t.strip(), h[key].split(","))
                     else:
