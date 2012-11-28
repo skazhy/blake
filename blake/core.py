@@ -17,6 +17,30 @@ from markdown import markdown
 EXTENSIONS = [".md", ".markdown"]
 
 
+class QueryDict(object):
+    def __init__(self, d=None):
+        if d is not None:
+            self._dict = d
+        else:
+            self._dict = {}
+
+    def __getitem__(self, key):
+        if key in self._dict:
+            return self._dict[key]
+        return None
+
+    def __setitem__(self, key, value):
+        self._dict[key] = value
+
+    def __delitem__(self, key):
+        if key in self._dict:
+            self._dict.pop(key)
+    
+    def __iter__(self):
+        for key in self._dict:
+            yield key
+
+
 def _validate_path(path, filename=None, extensions=EXTENSIONS):
     """Checks if given path contains a valid Markdown document."""
 
@@ -97,11 +121,10 @@ class Blake(object):
 
 class Document(Blake):
     def __init__(self, filename=None, parse=True, static_prefix=""):
-        # Head should be a silent dict-a-like that doesnt keyerror
-        self.head = {
+        self.head = QueryDict({
             "full_path": filename,
             "subdirectory": []
-        }
+        })
         self._title = None
         self._content = ""
         self.static_prefix = static_prefix
@@ -152,7 +175,6 @@ class Document(Blake):
                 # The following line is the bottleneck of #create(), should
                 # investigate how to boost YAML parsing
                 h = yaml.load(cont)
-                h = {}
                 for key in h: 
                     if key == "title":
                         self.title = h[key] 
@@ -274,8 +296,6 @@ class DocumentList(Blake):
 
     # When adding the custom iterable type, should extend this to support
     # eg  list.find(tags__contain="one tag")
-    # TODO: currently this is will raise errors when querying for head
-    #       properties not present in all docs. the silent dict should fix this
     def find(self, *args, **kwargs):
         """ Query the documentlist. Return a DL with fewer results."""
         if kwargs:
@@ -303,7 +323,7 @@ class DocumentList(Blake):
             return None
         return doc[0]
 
-    def distinct(self, key):
+    def distinct(self, key, sparse=True):
         """ Get distinct values of an attribute. """
         values = []
         if key == "title":
@@ -317,9 +337,11 @@ class DocumentList(Blake):
                 values.append(doc.slug)
         else:
             for doc in self:
-                if key in doc.head:
-                    values.append(doc.head[key])
-        return set(values)
+                values.append(doc.head[key])
+        s = set(values)
+        if sparse and None in s:
+            s.remove(None)
+        return s
 
     def to_list(self, include=[], exclude=[]):
         """ Returns list of to_dict for each of the elements. """
