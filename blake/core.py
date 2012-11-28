@@ -101,7 +101,9 @@ class Blake(object):
             subdir = self.head["subdirectory"]
             dir_slug = "-".join(map(lambda x: slugify(x), subdir))
             return "-".join([dir_slug, slugify(self.filename)])
-        return slugify(self.filename)
+        if self.filename is not None:
+            return self.filename
+        return None 
 
     @slug.setter
     def slug(self, value):
@@ -141,7 +143,9 @@ class Document(Blake):
 
     @property
     def filename(self):
-        return os.path.splitext(os.path.split(self.head["full_path"])[1])[0]
+        if self.head["full_path"] is not None:
+            return os.path.splitext(os.path.split(self.head["full_path"])[1])[0]
+        return None
 
     @property
     def content(self):
