@@ -43,6 +43,10 @@ class QueryDict(object):
     def keys(self):
         return self._dict.keys()
 
+def islocal(path):
+    if path[:7] == "http://" or path[:8] == "https://" or path[:2] == "//":
+        return False
+    return True
 
 def _validate_path(path, filename=None, extensions=EXTENSIONS):
     """Checks if given path contains a valid Markdown document."""
@@ -151,12 +155,14 @@ class Document(Blake):
         return None
 
     @property
+    def images(self):
+        return map(lambda i: i, re.findall('!\[.*\]\((.*)\)', self._content))
+
+    @property
     def content(self):
         md = markdown(self._content)
-        for img in map(lambda i: i, re.findall('!\[.*\]\((.*)\)', self._content)):
-            # TODO: Move external image *identifiers* to a custom property
-            if img[:7] != "http://" and img[:8] != "https://" and img[:2] != "//":
-                 md = md.replace(img, self.static_prefix + img)
+        for img in filter(lambda x: islocal(x), self.images):
+             md = md.replace(img, self.static_prefix + img)
         return md 
 
     @content.setter
