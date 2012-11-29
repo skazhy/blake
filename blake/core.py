@@ -103,6 +103,8 @@ class Blake(object):
     @property
     def slug(self):
         """Returns slug of the document."""
+        if self._slug is not None:
+            return self._slug
         slug = ""
         if "subdirectory" in self.head and self.head["subdirectory"]:
             subdir = self.head["subdirectory"]
@@ -114,8 +116,7 @@ class Blake(object):
 
     @slug.setter
     def slug(self, value):
-        value
-        # TODO: implement this
+        self._slug = slugify(value)
 
     @property
     def title(self):
@@ -134,6 +135,7 @@ class Document(Blake):
             "full_path": filename,
             "subdirectory": []
         })
+        self._slug = None
         self._title = None
         self._content = ""
         self.static_prefix = static_prefix
@@ -224,14 +226,13 @@ class Document(Blake):
             if key not in exclude:
                 d[key] = self.head[key]
 
-        d["slug"] = self.slug
-        d["filename"] = self.filename
-        d["title"] = self.title
-
-        if "category" in d:
-            d["category_slug"] = slugify(self.head["category"])
-
-        if self.content is not None:
+        if "slug" not in exclude:
+            d["slug"] = self.slug
+        if "filename" not in exclude:
+            d["filename"] = self.filename
+        if "title" not in exclude: 
+            d["title"] = self.title
+        if "content" not in exclude:
             d["content"] = self.content
 
         # If include is present - leave only given keys
@@ -268,6 +269,7 @@ def create_document(src, static_prefix=""):
 class DocumentList(Blake):
     def __init__(self, src=None, static_prefix="", recursive=True):
         self._documents = []
+        self._slug = None
         self.document = Document
         self.static_prefix = static_prefix
         self.subdirectory = []
@@ -275,9 +277,13 @@ class DocumentList(Blake):
         if src:
             load(src, recursive=recursive)
 
-    # TODO: if stop is a slice return inheritance-safe DocList, not an array.
-    def __getitem__(self, stop):
-        return self._documents[stop]
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            a = copy.copy(self)
+            a._documents = self._documents[i]
+            return a
+        else:
+            return self._documents[i]
 
     def __iter__(self):
         for doc in self._documents:
@@ -290,6 +296,7 @@ class DocumentList(Blake):
     def __iadd__(self, doc):
         if isinstance(doc, Document):
             self._documents.append(doc)
+        return self
 
     @property
     def documents(self):
