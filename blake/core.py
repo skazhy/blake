@@ -275,7 +275,7 @@ class DocumentList(Blake):
         self.subdirectory = []
 
         if src:
-            load(src, recursive=recursive)
+            self.add(src, recursive=recursive)
 
     def __getitem__(self, i):
         if isinstance(i, slice):
@@ -306,13 +306,20 @@ class DocumentList(Blake):
     def documents(self, docs):
         self._documents = docs
 
-    def add(self, filename=None, parse=True, static_prefix=""):
+    def add(self, filename=None, parse=True, static_prefix="", recursive=True):
         # TODO: nested documentlists
-        doc = self.document(filename=filename, parse=parse, static_prefix=static_prefix)
-        self += doc
-
-    def load(self, src, recursive=True):
-        valid_documents(src, instance=self, recursive=recursive)
+        if not os.path.exists(filename):
+            return False
+        if os.path.isdir(filename):
+            valid_documents(filename, parse=parse,
+                            instance=self,
+                            static_prefix=static_prefix,
+                            recursive=recursive)
+        else:
+            self += self.document(filename=filename,
+                                  parse=parse,
+                                  static_prefix=static_prefix)
+        return True
 
     # When adding the custom iterable type, should extend this to support
     # eg  list.find(tags__contain="one tag")
