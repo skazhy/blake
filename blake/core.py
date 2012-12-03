@@ -25,9 +25,7 @@ class QueryDict(object):
             self._dict = {}
 
     def __getitem__(self, key):
-        if key in self._dict:
-            return self._dict[key]
-        return None
+        return self._dict(key, None)
 
     def __setitem__(self, key, value):
         self._dict[key] = value
@@ -35,7 +33,7 @@ class QueryDict(object):
     def __delitem__(self, key):
         if key in self._dict:
             self._dict.pop(key)
-    
+
     def __iter__(self):
         for key in self._dict:
             yield key
@@ -43,10 +41,12 @@ class QueryDict(object):
     def keys(self):
         return self._dict.keys()
 
+
 def islocal(path):
     if path[:7] == "http://" or path[:8] == "https://" or path[:2] == "//":
         return False
     return True
+
 
 def _validate_path(path, filename=None, extensions=EXTENSIONS):
     """Checks if given path contains a valid Markdown document."""
@@ -112,7 +112,7 @@ class Blake(object):
             return "-".join([dir_slug, slugify(self.filename)])
         if self.filename is not None:
             return self.filename
-        return None 
+        return None
 
     @slug.setter
     def slug(self, value):
@@ -152,6 +152,7 @@ class Document(Blake):
 
     @property
     def filename(self):
+        # This needs some explanation
         if self.head["full_path"] is not None:
             return os.path.splitext(os.path.split(self.head["full_path"])[1])[0]
         return None
@@ -164,8 +165,8 @@ class Document(Blake):
     def content(self):
         md = markdown(self._content)
         for img in filter(lambda x: islocal(x), self.images):
-             md = md.replace(img, self.static_prefix + img)
-        return md 
+            md = md.replace(img, self.static_prefix + img)
+        return md
 
     @content.setter
     def content(self, c):
@@ -190,13 +191,13 @@ class Document(Blake):
                 # The following line is the bottleneck of #create(), should
                 # investigate how to boost YAML parsing
                 h = yaml.load(cont)
-                for key in h: 
+                for key in h:
                     if key == "title":
-                        self._title = h[key] 
+                        self._title = h["title"]
                     elif key == "tags":
-                        self.head['tags'] = map(lambda t: t.strip(), h[key].split(","))
+                        self.head["tags"] = [t.strip() for t in h["tags"].split(",")]
                     else:
-                        self.head[key] = h[key] 
+                        self.head[key] = h[key]
                 line = blakefile.readline()
                 while line:
                     self._content += line
@@ -230,7 +231,7 @@ class Document(Blake):
             d["slug"] = self.slug
         if "filename" not in exclude:
             d["filename"] = self.filename
-        if "title" not in exclude: 
+        if "title" not in exclude:
             d["title"] = self.title
         if "content" not in exclude:
             d["content"] = self.content
