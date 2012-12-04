@@ -44,10 +44,10 @@ class QueryDict(object):
 
 class AttrList(object):
     # TODO: blake0.2.2 should add more functions to both of these
-    #       classes 
+    #       classes
     def __init__(self):
         self._list = []
-    
+
     def __getitem__(self, key):
         return self._list[key]
 
@@ -111,7 +111,8 @@ def slugify(text, delim='-', escape_html=False):
         text = delim.join(text)
 
     text = text.decode("UTF-8")
-    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    text = unicodedata.normalize("NFKD", text)  # transform to normalforms
+    text = text.encode("ascii", "ignore").decode("ascii")
 
     _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
 
@@ -178,9 +179,10 @@ class Document(Blake):
 
     @property
     def filename(self):
-        # This needs some explanation
         if self.head["full_path"] is not None:
-            return os.path.splitext(os.path.split(self.head["full_path"])[1])[0]
+            path, filename = os.path.split(self.head["full_path"])
+            filename, extension = os.path.splitext(filename)
+            return filename
         return None
 
     @property
