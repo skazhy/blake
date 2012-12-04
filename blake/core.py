@@ -25,7 +25,7 @@ class QueryDict(object):
             self._dict = {}
 
     def __getitem__(self, key):
-        return self._dict(key, None)
+        return self._dict.get(key, None)
 
     def __setitem__(self, key, value):
         self._dict[key] = value
@@ -40,6 +40,32 @@ class QueryDict(object):
 
     def keys(self):
         return self._dict.keys()
+
+
+class AttrList(object):
+    # TODO: blake0.2.2 should add more functions to both of these
+    #       classes 
+    def __init__(self):
+        self._list = []
+    
+    def __getitem__(self, key):
+        return self._list[key]
+
+    def __setitem__(self, key, value):
+        self._list[key] = value
+
+    def __iter__(self):
+        for item in self._list:
+            yield item
+
+    def __str__(self):
+        return ",".join(self._list)
+
+    def __unicode__(self):
+        return ",".join(self._list)
+
+    def append(self, item):
+        self._list.append(item)
 
 
 def islocal(path):
@@ -195,7 +221,8 @@ class Document(Blake):
                     if key == "title":
                         self._title = h["title"]
                     elif key == "tags":
-                        self.head["tags"] = [t.strip() for t in h["tags"].split(",")]
+                        self.head["tags"] = AttrList()
+                        [self.head["tags"].append(t.strip()) for t in h["tags"].split(",")]
                     else:
                         self.head[key] = h[key]
                 line = blakefile.readline()
