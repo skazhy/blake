@@ -16,8 +16,8 @@ Syncing data between MongoDB & your Markdown folder is as easy as:
 
     from blake.mongodb import MongoDocumentList
 
-    docs = MongoDocumentList()
+    import pymongo
 
-    docs.load('/path/to/markdown/files/')
-   
-    docs.save()
+    docs = MongoDocumentList(/path/to/markdown/files')
+
+    docs.save(pymongo.Connection("localhost", 27017)["test"]["documents"])

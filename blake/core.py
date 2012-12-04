@@ -259,19 +259,22 @@ class Document(Blake):
             if arg in self.head:
                 self.head["%s_slug" % arg] = slugify(self.head[arg])
 
-
-def create_document(src, static_prefix=""):
-    doc_path = _validate_path(src)
-    if doc_path:
-        return Document(src, static_prefix=static_prefix)
-    return False
+    def dump(self):
+        yield "---"
+        exc = ["full_path", "subdirectory", "content", "filename", "slug"]
+        dct = self.to_dict(exclude=exc)
+        for key in dct:
+            yield "%s: %s" % (key, dct[key])
+        yield "---"
+        yield self._content
 
 
 class DocumentList(Blake):
+    document = Document
+
     def __init__(self, src=None, static_prefix="", recursive=True):
         self._documents = []
         self._slug = None
-        self.document = Document
         self.static_prefix = static_prefix
         self.subdirectory = []
 

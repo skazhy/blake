@@ -16,9 +16,7 @@ class MongoDocument(Document):
 
 
 class MongoDocumentList(DocumentList):
-    def __init__(self, *args, **kwargs):
-        super(MongoDocumentList, self).__init__(*args, **kwargs)
-        self.document = MongoDocument
+    document = MongoDocument
 
     def save(self, db, sync=True, fields=None, exclude=[]):
         if sync:
