@@ -1,7 +1,7 @@
 #
-# blake.core 0.2.0
+# blake.core 0.2.1
 # Do cool things with your Markdown docs
-# skazhy / sept-nov 2012
+# skazhy / sept-dec 2012
 #
 
 import copy
