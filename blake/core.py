@@ -293,7 +293,7 @@ class Document(Blake):
         exc = ["full_path", "subdirectory", "content", "filename", "slug"]
         dct = self.to_dict(exclude=exc)
         for key in dct:
-            yield "%s: %s" % (key, dct[key])
+            yield "%s: %s\n" % (key, dct[key])
         yield "---"
         yield self._content
 
