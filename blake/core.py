@@ -254,7 +254,7 @@ class Document(Blake):
             exclude = []
         for key in self.head.keys():
             if key not in exclude:
-                d[key] = self.head[key]
+                d[key] = self.head[key].__str__()
 
         if "slug" not in exclude:
             d["slug"] = self.slug
