@@ -227,8 +227,10 @@ class Document(Blake):
                     if key == "title":
                         self._title = h["title"]
                     elif key == "tags":
+                        if not isinstance(h["tags"], list):
+                            h["tags"] = h["tags"].split(",")
                         self.head["tags"] = AttrList()
-                        [self.head["tags"].append(t.strip()) for t in h["tags"].split(",")]
+                        [self.head["tags"].append(t.strip()) for t in h["tags"]]
                     else:
                         self.head[key] = h[key]
                 line = blakefile.readline()
@@ -414,6 +416,9 @@ class DocumentList(Blake):
     def to_list(self, include=[], exclude=[]):
         """ Returns list of to_dict for each of the elements. """
         return map(lambda d: d.to_dict(include=include, exclude=exclude), self)
+     
+    def count():
+        return len(self)
 
 
 def valid_documents(src, parse=True, instance=None, static_prefix="", recursive=True):
