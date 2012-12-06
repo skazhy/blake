@@ -299,7 +299,7 @@ class Document(Blake):
         for key in dct:
             yield "%s: %s\n" % (key, dct[key])
         yield "---\n"
-        yield self._content
+        yield self._content.encode("utf-8")
     
     def replace(self, old, new, count=-1):
         """ Merely a wrapper for str.replace. """
