@@ -187,7 +187,11 @@ class Document(Blake):
 
     @property
     def images(self):
-        return map(lambda i: i, re.findall('!\[.*\]\((.*)\)', self._content))
+        pattern = '!\[.*\]\((.*)\)'
+        seen = set()
+        seen_add = seen.add
+        return [x for x in [i for i in re.findall(pattern, self._content)]
+                if x not in seen and not seen_add(x)]
 
     @property
     def content(self):
@@ -296,6 +300,10 @@ class Document(Blake):
             yield "%s: %s\n" % (key, dct[key])
         yield "---\n"
         yield self._content
+    
+    def replace(self, old, new, count=-1):
+        """ Merely a wrapper for str.replace. """
+        self._content = self._content.replace(old, new, count)
 
 
 class DocumentList(Blake):
