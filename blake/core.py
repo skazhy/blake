@@ -193,12 +193,16 @@ class Document(Blake):
         return [x for x in [i for i in re.findall(pattern, self._content)]
                 if x not in seen and not seen_add(x)]
 
-    @property
-    def content(self):
-        md = markdown(self._content)
+    # Override this if you don't want to use markdown
+    def render(self, renderable):
+        md = markdown(renderable)
         for img in filter(lambda x: islocal(x), self.images):
             md = md.replace(img, self.static_prefix + img)
         return md
+
+    @property
+    def content(self):
+        return self.render(self._content)
 
     @content.setter
     def content(self, c):
@@ -310,6 +314,7 @@ class Document(Blake):
 
 class DocumentList(Blake):
     document = Document
+    extensions = EXTENSIONS
 
     def __init__(self, src=None, static_prefix="", recursive=True):
         self._documents = []
@@ -431,7 +436,7 @@ def valid_documents(src, parse=True, instance=None, static_prefix="", recursive=
     if recursive:
         for (path, dirs, files) in os.walk(src):
             for filename in files:
-                doc_path = _validate_path(path, filename)
+                doc_path = _validate_path(path, filename, d.extensions)
                 if doc_path:
                     d.add(filename=doc_path, parse=parse, static_prefix=static_prefix)
                     d[-1].head["subdirectory"] = _relative_subdirectories(src, path)
