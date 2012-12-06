@@ -289,12 +289,12 @@ class Document(Blake):
                 self.head["%s_slug" % arg] = slugify(self.head[arg])
 
     def dump(self):
-        yield "---"
+        yield "---\n"
         exc = ["full_path", "subdirectory", "content", "filename", "slug"]
         dct = self.to_dict(exclude=exc)
         for key in dct:
             yield "%s: %s\n" % (key, dct[key])
-        yield "---"
+        yield "---\n"
         yield self._content
 
 
