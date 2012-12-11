@@ -384,6 +384,12 @@ class DocumentList(Blake):
                                   static_prefix=static_prefix)
         return True
 
+    def exclude(self, *args, **kwargs):
+        new_kw = {}
+        for key in kwargs:
+            new_kw[key + "__ne"] = kwargs[key]
+        return self.find(self, *args, **new_kw)
+    
     def find(self, *args, **kwargs):
         """ Query the documentlist. Return a DL with fewer results."""
         if kwargs:
@@ -392,18 +398,24 @@ class DocumentList(Blake):
                 key, value = kwargs.popitem()
                 key_arr = key.split("__")
                 # This should be improved to add more __ options
-                if len(key_arr) == 2:
+                if len(key_arr) == 2 and key_arr[1] == "has":
                     key = key_arr[0]
                     a.documents = filter(lambda x: x.head[key] and value in x.head[key], a)
                 else:
-                    if key == "title":
-                        a.documents = filter(lambda x: x.title == value, a)
-                    elif key == "filename":
-                        a.documents = filter(lambda x: x.filename == value, a)
-                    elif key == "slug":
-                        a.documents = filter(lambda x: x.slug == value, a)
+                    if len(key_arr) == 2 and key_arr[1] == "ne":
+                        key = key_arr[0]
+                        comp = value.__ne__
                     else:
-                        a.documents = filter(lambda x: x.head[key] == value, a)
+                        comp = value.__eq__
+
+                    if key == "title":
+                        a.documents = filter(lambda x: comp(x.title), a)
+                    elif key == "filename":
+                        a.documents = filter(lambda x: comp(x.filename), a)
+                    elif key == "slug":
+                        a.documents = filter(lambda x: comp(x.slug), a)
+                    else:
+                        a.documents = filter(lambda x: comp(x.head[key]), a)
             return a
         return self
 
