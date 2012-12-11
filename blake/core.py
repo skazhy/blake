@@ -58,6 +58,9 @@ class AttrList(object):
         for item in self._list:
             yield item
 
+    def __contains__(self, item):
+        return item in self._list
+
     def __str__(self):
         return ",".join(self._list)
 
@@ -381,22 +384,26 @@ class DocumentList(Blake):
                                   static_prefix=static_prefix)
         return True
 
-    # When adding the custom iterable type, should extend this to support
-    # eg  list.find(tags__contain="one tag")
     def find(self, *args, **kwargs):
         """ Query the documentlist. Return a DL with fewer results."""
         if kwargs:
             a = copy.copy(self)
             while kwargs:
                 key, value = kwargs.popitem()
-                if key == "title":
-                    a.documents = filter(lambda x: x.title == value, a)
-                elif key == "filename":
-                    a.documents = filter(lambda x: x.filename == value, a)
-                elif key == "slug":
-                    a.documents = filter(lambda x: x.slug == value, a)
+                key_arr = key.split("__")
+                # This should be improved to add more __ options
+                if len(key_arr) == 2:
+                    key = key_arr[0]
+                    a.documents = filter(lambda x: x.head[key] and value in x.head[key], a)
                 else:
-                    a.documents = filter(lambda x: x.head[key] == value, a)
+                    if key == "title":
+                        a.documents = filter(lambda x: x.title == value, a)
+                    elif key == "filename":
+                        a.documents = filter(lambda x: x.filename == value, a)
+                    elif key == "slug":
+                        a.documents = filter(lambda x: x.slug == value, a)
+                    else:
+                        a.documents = filter(lambda x: x.head[key] == value, a)
             return a
         return self
 
