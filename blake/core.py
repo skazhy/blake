@@ -177,13 +177,20 @@ class Document(Blake):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-    @property
-    def filename(self):
+    def _path_split(self, index=0):
         if self.head["full_path"] is not None:
             path, filename = os.path.split(self.head["full_path"])
             filename, extension = os.path.splitext(filename)
-            return filename
+            return [path, filename, extension][index]
         return None
+
+    @property
+    def filename(self):
+        return self._path_split(1)
+
+    @property
+    def extension(self):
+        return self._path_split(2)
 
     @property
     def images(self):
@@ -193,16 +200,21 @@ class Document(Blake):
         return [x for x in [i for i in re.findall(pattern, self._content)]
                 if x not in seen and not seen_add(x)]
 
-    # Override this if you don't want to use markdown
-    def render(self, renderable):
+    # Override the following methods to define custom
+    # rendering and content generation process
+    def render(self, renderable, context):
         md = markdown(renderable)
         for img in filter(lambda x: islocal(x), self.images):
             md = md.replace(img, self.static_prefix + img)
         return md
 
+    def context(self):
+        # Default context returns everything except content
+        return self.to_dict(exclude=["content"])
+
     @property
     def content(self):
-        return self.render(self._content)
+        return self.render(self._content, self.context())
 
     @content.setter
     def content(self, c):
