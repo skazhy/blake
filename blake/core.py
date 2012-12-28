@@ -330,6 +330,7 @@ class Document(Blake):
 class DocumentList(Blake):
     document = Document
     extensions = EXTENSIONS
+    properties = ("filename", "title", "slug", "bug")
 
     def __init__(self, src=None, static_prefix="", recursive=True):
         self._documents = []
@@ -397,7 +398,9 @@ class DocumentList(Blake):
             while kwargs:
                 key, value = kwargs.popitem()
                 key_arr = key.split("__")
-                # This should be improved to add more __ options
+                # TODO: __has on self.properties attribute that is iterable
+                # TODO: Improve to add more __ options, see how Django ORM
+                #       implements __ option parsing
                 if len(key_arr) == 2 and key_arr[1] == "has":
                     key = key_arr[0]
                     a.documents = filter(lambda x: x.head[key] and value in x.head[key], a)
@@ -408,12 +411,8 @@ class DocumentList(Blake):
                     else:
                         comp = value.__eq__
 
-                    if key == "title":
-                        a.documents = filter(lambda x: comp(x.title), a)
-                    elif key == "filename":
-                        a.documents = filter(lambda x: comp(x.filename), a)
-                    elif key == "slug":
-                        a.documents = filter(lambda x: comp(x.slug), a)
+                    if key in self.properties:
+                        a.documents = filter(lambda x: comp(getattr(x, key)), a)
                     else:
                         a.documents = filter(lambda x: comp(x.head[key]), a)
             return a
@@ -432,18 +431,10 @@ class DocumentList(Blake):
     def distinct(self, key, sparse=True):
         """ Get distinct values of an attribute. """
         values = []
-        if key == "title":
-            for doc in self:
-                values.append(doc.title)
-        elif key == "filename":
-            for doc in self:
-                values.append(doc.filename)
-        elif key == "slug":
-            for doc in self:
-                values.append(doc.slug)
+        if key in self.properties:
+            [values.append(getattr(doc, key, None)) for doc in self]
         else:
-            for doc in self:
-                values.append(doc.head[key])
+            [values.append(doc.head[key]) for doc in self]
         s = set(values)
         if sparse and None in s:
             s.remove(None)
