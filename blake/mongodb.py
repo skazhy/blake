@@ -5,7 +5,6 @@
 #
 
 from core import Document, DocumentList
-import pymongo
 
 
 class MongoDocument(Document):

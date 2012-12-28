@@ -135,7 +135,7 @@ class Blake(object):
         """Returns slug of the document."""
         if self._slug is not None:
             return self._slug
-        slug = ""
+
         if "subdirectory" in self.head and self.head["subdirectory"]:
             subdir = self.head["subdirectory"]
             dir_slug = "-".join(map(lambda x: slugify(x), subdir))
@@ -321,7 +321,7 @@ class Document(Blake):
             yield "%s: %s\n" % (key, dct[key])
         yield "---\n"
         yield self._content.encode("utf-8")
-    
+
     def replace(self, old, new, count=-1):
         """ Merely a wrapper for str.replace. """
         self._content = self._content.replace(old, new, count)
@@ -390,7 +390,7 @@ class DocumentList(Blake):
         for key in kwargs:
             new_kw[key + "__ne"] = kwargs[key]
         return self.find(self, *args, **new_kw)
-    
+
     def find(self, *args, **kwargs):
         """ Query the documentlist. Return a DL with fewer results."""
         if kwargs:
@@ -418,9 +418,6 @@ class DocumentList(Blake):
             return a
         return self
 
-    def to_list(self, include=[], exclude=[]):
-        return map(lambda d: d.to_dict(include=include, exclude=exclude), self)
-
     def get(self, *args, **kwargs):
         """ Retrieve a single document. """
         doc = self.find(*args, **kwargs).documents
@@ -443,8 +440,8 @@ class DocumentList(Blake):
     def to_list(self, include=[], exclude=[]):
         """ Returns list of to_dict for each of the elements. """
         return map(lambda d: d.to_dict(include=include, exclude=exclude), self)
-     
-    def count():
+
+    def count(self):
         return len(self)
 
 
