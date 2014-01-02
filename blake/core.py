@@ -187,7 +187,7 @@ class Document(Blake):
 
     @property
     def images(self):
-        return map(lambda i: i, re.findall('!\[.*\]\((.*)\)', self._content))
+        return map(lambda i: i, re.findall('!\[.*\]\((.*\.png)\)', self._content))
 
     @property
     def content(self):
