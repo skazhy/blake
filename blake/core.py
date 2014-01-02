@@ -193,7 +193,7 @@ class Document(Blake):
     def content(self):
         md = markdown(self._content)
         for img in filter(lambda x: islocal(x), self.images):
-            md = md.replace(img, self.static_prefix + img)
+            md = md.replace('"%s"' % img, '"%s%s"' % (self.static_prefix, img))
         return md
 
     @content.setter
