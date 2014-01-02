@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name = "Blake",
-    version = "0.2.2",
+    version = "0.2.3",
     author = "Karlis Lauva",
     author_email = "karlis@cobookapp.com",
     packages = ["blake"],
